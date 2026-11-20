@@ -21,7 +21,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ['recipient_name', 'address_line1', 'address_line2', 'state', 'phone', 'is_default']
+    list_display = ['recipient_name', 'line1', 'line2', 'state', 'phone', 'is_default']
     list_filter = ['state', 'is_default']
     search_fields = ['state', 'recipient_name', 'phone']
     readonly_fields = ['user']
