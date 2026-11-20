@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -31,10 +31,11 @@ class CategoryListView(ListAPIView):
     serializer_class = CategorySerializer
 
 
-class CategoryDetailView(RetrieveAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    lookup_field = 'name'
-    lookup_url_kwarg = 'name'
+class CategoryDetailView(ListAPIView):
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        category = get_object_or_404(Category, slug=self.kwargs['slug'])
+        return Product.objects.filter(category=category, is_active=True)
 
 
