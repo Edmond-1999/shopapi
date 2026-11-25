@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
@@ -24,7 +25,7 @@ class Product(TimestampedModel):
     category = models.ForeignKey(Category, related_name="products", on_delete=models.PROTECT)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     sku = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
 

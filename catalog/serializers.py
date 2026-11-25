@@ -54,6 +54,3 @@ class CartSerializer(serializers.ModelSerializer):
             model = Review
             read_only_fields = ['product', 'name']
             fields = ['rating', 'comment', 'product', 'name']
-
-        def create(self, validated_data):
-            return Review.objects.create(**validated_data)

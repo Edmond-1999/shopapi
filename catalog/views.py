@@ -67,8 +67,9 @@ class CartDetailView(RetrieveAPIView):
             return CartItemAddSerializer
         return CartSerializer
 
-    def post(self, request, *args, **kwargs):
-        cart = self.get_object()
+    def post(self, request, cart_id):
+        cart = get_object_or_404(self.get_queryset(), cart_id=cart_id)
+        self.check_object_permissions(request, cart)
         item_serializer = self.get_serializer(data=request.data)
         item_serializer.is_valid(raise_exception=True)
         product = item_serializer.validated_data["product"]
