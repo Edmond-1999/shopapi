@@ -2,8 +2,27 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import Address
 
 User = get_user_model()
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            "id",
+            "label",
+            "recipient_name",
+            "phone",
+            "line1",
+            "line2",
+            "city",
+            "state",
+            "country",
+            "postal_code",
+            "is_default",
+        ]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
