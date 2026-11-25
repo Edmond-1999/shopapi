@@ -1,9 +1,8 @@
 from django.db import transaction
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import GenericAPIView, ListCreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import Address
 from .serializers import AddressSerializer, LoginSerializer, RegisterSerializer
@@ -25,11 +24,12 @@ class AddressListCreateView(ListCreateAPIView):
         serializer.save(user=user)
 
 
-class RegisterView(APIView):
+class RegisterView(GenericAPIView):
+    serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response(
@@ -43,13 +43,11 @@ class RegisterView(APIView):
         )
 
 
-class LoginView(APIView):
+class LoginView(GenericAPIView):
+    serializer_class = LoginSerializer
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(
-            data=request.data,
-            context={"request": request},
-        )
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data, status=status.HTTP_200_OK)

@@ -59,9 +59,14 @@ class CartDetailView(RetrieveAPIView):
     lookup_url_kwarg = "cart_id"
     permission_classes = [AllowAny]
 
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CartItemAddSerializer
+        return CartSerializer
+
     def post(self, request, *args, **kwargs):
         cart = self.get_object()
-        item_serializer = CartItemAddSerializer(data=request.data)
+        item_serializer = self.get_serializer(data=request.data)
         item_serializer.is_valid(raise_exception=True)
         product = item_serializer.validated_data["product"]
         quantity = item_serializer.validated_data["quantity"]
@@ -80,7 +85,7 @@ class CartDetailView(RetrieveAPIView):
 
         cart.refresh_from_db()
         return Response(
-            self.get_serializer(cart).data,
+            CartSerializer(cart).data,
             status=status.HTTP_200_OK,
         )
 

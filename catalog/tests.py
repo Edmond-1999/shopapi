@@ -106,6 +106,16 @@ class CartEndpointsTests(TestCase):
         self.assertEqual(response.json()['items'][0]['quantity'], 3)
         self.assertEqual(response.json()['total'], 76.5)
 
+    def test_cart_browsable_api_renders_add_item_form(self):
+        response = self.client.get(
+            reverse('cart_detail', kwargs={'cart_id': self.cart.cart_id}),
+            HTTP_ACCEPT='text/html',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="product_id"')
+        self.assertContains(response, 'name="quantity"')
+
     def test_cart_detail_returns_404_for_unknown_cart(self):
         response = self.client.get(
             reverse(

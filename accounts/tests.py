@@ -28,6 +28,16 @@ class AuthenticationEndpointsTests(TestCase):
             get_user_model().objects.filter(email="newuser@example.com").exists()
         )
 
+    def test_register_browsable_api_renders_form(self):
+        response = self.client.get(
+            reverse("register"),
+            HTTP_ACCEPT="text/html",
+        )
+
+        self.assertEqual(response.status_code, 405)
+        self.assertContains(response, 'name="email"', status_code=405)
+        self.assertContains(response, 'name="password"', status_code=405)
+
     def test_login_returns_jwt_tokens(self):
         get_user_model().objects.create_user(
             username="loginuser",
