@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from .models import Category, Product
+from .models import Cart, CartItem, Category, Product
 
 
 class CategoryEndpointsTests(TestCase):
@@ -38,6 +38,7 @@ class CategoryEndpointsTests(TestCase):
         self.assertEqual(
             response.json(),
             [{
+                'id': self.active_product.id,
                 'title': 'Laptop',
                 'price': 999.99,
                 'description': 'A laptop',
@@ -47,5 +48,70 @@ class CategoryEndpointsTests(TestCase):
 
     def test_category_detail_returns_404_for_unknown_slug(self):
         response = self.client.get(reverse('category_detail', kwargs={'slug': 'unknown'}))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_product_detail_returns_product_by_id(self):
+        response = self.client.get(
+            reverse('product_detail', kwargs={'pk': self.active_product.id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['id'], self.active_product.id)
+        self.assertEqual(response.json()['sku'], 'LAPTOP-001')
+
+    def test_product_detail_returns_404_for_inactive_product(self):
+        inactive_product = Product.objects.get(sku='LAPTOP-OLD')
+
+        response = self.client.get(
+            reverse('product_detail', kwargs={'pk': inactive_product.id})
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+
+class CartEndpointsTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.category = Category.objects.create(name='Books', slug='books')
+        self.product = Product.objects.create(
+            category=self.category,
+            title='Django Handbook',
+            description='A guide',
+            price='25.50',
+            sku='DJANGO-001',
+            is_active=True,
+        )
+        self.cart = Cart.objects.create()
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=2)
+
+    def test_cart_detail_returns_items_and_total(self):
+        response = self.client.get(
+            reverse('cart_detail', kwargs={'cart_id': self.cart.cart_id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['cart_id'], str(self.cart.cart_id))
+        self.assertEqual(response.json()['items'][0]['line_total'], 51.0)
+        self.assertEqual(response.json()['total'], 51.0)
+
+    def test_post_adds_cart_item_and_returns_updated_total(self):
+        response = self.client.post(
+            reverse('cart_detail', kwargs={'cart_id': self.cart.cart_id}),
+            {'product_id': self.product.id, 'quantity': 1},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['items'][0]['quantity'], 3)
+        self.assertEqual(response.json()['total'], 76.5)
+
+    def test_cart_detail_returns_404_for_unknown_cart(self):
+        response = self.client.get(
+            reverse(
+                'cart_detail',
+                kwargs={'cart_id': '00000000-0000-0000-0000-000000000000'},
+            )
+        )
 
         self.assertEqual(response.status_code, 404)
