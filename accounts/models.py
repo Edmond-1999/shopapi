@@ -13,6 +13,7 @@ class User(AbstractUser):
         return self.email or self.username
 
 
+
 class Address(models.Model):
     LabelChoices = [
         ("home", "HOME"),
@@ -20,27 +21,29 @@ class Address(models.Model):
         ("other", "OTHER")
     ]
 
-    user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE)
-    label = models.CharField(max_length=10, choices=LabelChoices, default="home", blank=True)
-    recipient_name = models.CharField(max_length=100, blank=False, null=False)
-    phone = models.CharField(max_length=15, blank=False)
-    line1 = models.CharField(max_length=255, blank=False, null=False)
+    user = models.ForeignKey(
+        User,
+        related_name="addresses",
+        on_delete=models.CASCADE
+    )
+    label = models.CharField(
+        max_length=10,
+        choices=LabelChoices,
+        default="home",
+        blank=True
+    )
+    recipient_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    line1 = models.CharField(max_length=255)
     line2 = models.CharField(max_length=255, blank=True, null=True)
-    city = models.CharField(max_length=100, blank=False, null=False)
-    state = models.CharField(max_length=100, blank=False, null=False)
-    country = models.CharField(max_length=100, blank=False, null=False, default="Nigeria")
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100, default="Nigeria")
     postal_code = models.CharField(max_length=20, blank=True)
     is_default = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "addresses"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user"],
-                condition=models.Q(is_default=True),
-                name="one_default_address_per_user",
-            )
-        ]
 
     def __str__(self):
         return f"{self.recipient_name} - {self.city}"

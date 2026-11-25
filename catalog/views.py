@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import F
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .serializers import (
@@ -12,7 +12,8 @@ from .serializers import (
     CategorySerializer,
     ProductSerializer,
 )
-from .models import Cart, CartItem, Category, Product
+from .models import Cart, CartItem, Category, Product, Review
+
 
 # Create your views here.
 
@@ -27,7 +28,7 @@ from .models import Cart, CartItem, Category, Product
 #     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductListView(ListAPIView):
+class ProductListView(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all().filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
@@ -42,10 +43,12 @@ class ProductDetailView(RetrieveAPIView):
 class CategoryListView(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
 
 
 class CategoryDetailView(ListAPIView):
     serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         category = get_object_or_404(Category, slug=self.kwargs['slug'])
@@ -90,3 +93,26 @@ class CartDetailView(RetrieveAPIView):
         )
 
 
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = CartSerializer.ProductReviewSerializer
+
+    def get_permissions(self):
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_serializer_context(self):
+        return {'user': self.request.user, 'product': self.kwargs['product_pk']}
+
+    def get_product(self):
+        return get_object_or_404(
+            Product,
+            pk=self.kwargs['product_pk'],
+            is_active=True,
+        )
+
+    def get_queryset(self):
+        return Review.objects.filter(product=self.get_product())
+
+    def perform_create(self, serializer):
+        serializer.save(product=self.get_product(), name=self.request.user)

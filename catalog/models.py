@@ -1,8 +1,9 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from common.models import TimestampedModel
 
@@ -88,3 +89,11 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.title}"
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()

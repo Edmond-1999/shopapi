@@ -17,10 +17,16 @@ class AddressListCreateView(ListCreateAPIView):
 
     @transaction.atomic
     def perform_create(self, serializer):
-        user = self.request.user
+        user = User.objects.select_for_update().get(
+            pk=self.request.user.pk
+        )
+
         if serializer.validated_data.get("is_default", False):
-            user.__class__.objects.select_for_update().get(pk=user.pk)
-            Address.objects.filter(user=user, is_default=True).update(is_default=False)
+            Address.objects.filter(
+                user=user,
+                is_default=True
+            ).update(is_default=False)
+
         serializer.save(user=user)
 
 

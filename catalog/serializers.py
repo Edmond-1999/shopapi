@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Cart, CartItem, Product, Category
+from .models import Cart, CartItem, Product, Category, Review
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,3 +48,12 @@ class CartSerializer(serializers.ModelSerializer):
             (item.line_total for item in cart.items.all()),
             start=0,
         )
+
+    class ProductReviewSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Review
+            read_only_fields = ['product', 'name']
+            fields = ['rating', 'comment', 'product', 'name']
+
+        def create(self, validated_data):
+            return Review.objects.create(**validated_data)
